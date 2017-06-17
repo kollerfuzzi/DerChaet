@@ -53,6 +53,13 @@ public class DBAccess {
 
     private Database db;
 
+    /**
+     * Creates a new DBAccess object
+     * @param dbname Name of the Database
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     * @throws IOException 
+     */
     public DBAccess(String dbname) throws SQLException, ClassNotFoundException, IOException {
         db = Database.getInstance();
         db.connect(dbname);
