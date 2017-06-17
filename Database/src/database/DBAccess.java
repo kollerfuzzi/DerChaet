@@ -141,8 +141,8 @@ public class DBAccess {
         while (rs.next()) {
             String username = rs.getString("source_user");
             String message = rs.getString("message");
-            LocalDateTime timestamp = LocalDateTime.ofEpochSecond(
-                    rs.getTimestamp("sendtime").getTime(), count, ZoneOffset.UTC);
+            LocalDateTime timestamp = 
+                    rs.getTimestamp("sendtime").toLocalDateTime();
             messages.add(new Message(username, message, timestamp));
         }
         return messages;
@@ -160,9 +160,10 @@ public class DBAccess {
         DBAccess acc = new DBAccess("chaet");
         System.out.println(acc.checkUserCredentials("gg", "grassmugg"));
         System.out.println(acc.checkUserCredentials("Elias", "kollerfuzzi"));
+        System.out.println(acc.checkUserCredentials("karl", "mayer"));
         
         //acc.registerUser("karl", "mayer", "karl.mayer@gmail.com");
-        acc.disableUser("karl");
+        //acc.disableUser("karl");
         acc.getLastMessages(50).forEach(System.out::println);
         acc.disconnect();
     }

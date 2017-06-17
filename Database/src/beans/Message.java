@@ -6,6 +6,7 @@
 package beans;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  *
@@ -48,6 +49,6 @@ public class Message {
 
     @Override
     public String toString() {
-        return "Message{" + "username=" + username + ", message=" + message + ", timestamp=" + timestamp + '}';
+        return username + "<" + timestamp.format(DateTimeFormatter.ofPattern("dd.MM.yyy HH:mm")) + ">: " + message;
     }    
 }
