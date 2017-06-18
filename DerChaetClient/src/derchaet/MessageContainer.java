@@ -6,23 +6,21 @@
 package derchaet;
 
 import javafx.beans.property.StringProperty;
+import javafx.scene.control.TextArea;
 
 /**
  *
  * @author koller
  */
 public class MessageContainer {
-    private StringProperty chatHistory;
+    private TextArea ta;
 
-    public MessageContainer(StringProperty textProp) {
-        setTextProperty(textProp);
-    }
-        
-    public void setTextProperty(StringProperty textProp) {
-        this.chatHistory = textProp;
+    public MessageContainer(TextArea ta) {
+        this.ta = ta;
     }
     
     public void append(String message) {
-        chatHistory.set(chatHistory.get() + message + "\n");
+        this.ta.textProperty().set(this.ta.textProperty().get() + message + "\n");
+        this.ta.positionCaret(this.ta.textProperty().length().get());
     }
 }

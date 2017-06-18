@@ -114,7 +114,7 @@
                               <HBox prefHeight="16.0" prefWidth="324.0" BorderPane.alignment="CENTER">
                                  <children>
                                     <Label alignment="CENTER" prefHeight="48.0" prefWidth="110.0" text="Angemeldet als: " />
-                                    <Label fx:id="lbName" alignment="CENTER" prefHeight="87.0" prefWidth="53.0" text="NAME">
+                                    <Label fx:id="lbName" prefHeight="24.0" prefWidth="190.0" text="NAME">
                                        <font>
                                           <Font size="18.0" />
                                        </font>

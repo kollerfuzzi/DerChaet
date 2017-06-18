@@ -10,167 +10,106 @@ import database.DBAccess;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 /**
  *
  * @author Alexander Mayer
  */
-public class Server
-{
+public class Server {
+
     private DBAccess database;
     //getLastmessages zum Client senden
 
     private ArrayList<ServerClient> clients = new ArrayList<>();
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         Server se = new Server();
-        try
-        {
+        try {
             se.startServer();
-        }
-        catch (IOException ex)
-        {
+        } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
 
-    public void startServer() throws IOException
-    {
+    public void startServer() throws IOException {
         System.out.println("Server started.");
         ServerSocket server = new ServerSocket(5555);
-        while (true)
-        {
-            try
-            {
+        while (true) {
+            try {
                 Socket client = server.accept();
-                System.out.println("Found Client in the deepest depths of the intern net. It was a very dangerous discovery. xD.");
+                System.out.println("Client connected");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
                 String cred = "";
-                cred = reader.readLine();
+                cred = AES2Point0.decryptHyperSecurely(reader.readLine());
                 String[] split = cred.split("\0");
+                System.out.println("[" + split[0] + "][" + split[1] + "]");
 
-                try
-                {
-                    database = new DBAccess("derchaet");
-                }
-                catch (ClassNotFoundException ex)
-                {
+                try {
+                    database = new DBAccess("chaet");
+                } catch (ClassNotFoundException ex) {
                     ex.printStackTrace();
                 }
 
-                if (database.checkUserCredentials(split[0], split[1]))
-                {
-                    ServerClient cl = new ServerClient(client, (Message t) ->
-                    {
+                if (database.checkUserCredentials(split[0], split[1])) {
+                    System.out.println("User credentials are correct");
+                    ServerClient cl = new ServerClient(client, (Message t)
+                            -> {
                         receiveMsg(t);
                         return null;
                     }, split[0]);
-
+                    cl.sendMsg("LOGIN SUCCESSFUL");
+                    this.clients.forEach(broadcast
+                            -> broadcast.sendMsg(cl.getName() + " connected!")
+                    );
                     this.clients.add(cl);
                     Thread clThread = new Thread(cl);
                     clThread.start();
-                    database.getLastMessages(50).stream().map(msg -> msg + "\n").forEach(cl::sendMsg);
+                    database.getLastMessages(50).stream().map(msg -> msg.toString()).forEach(cl::sendMsg);
+                } else {
+                    System.out.println("Login failed");
+                    PrintWriter writer = new PrintWriter(client.getOutputStream());
+                    writer.write(AES2Point0.encryptHyperSecurely("LOGIN FAILED") + "\n");
+                    writer.flush();
                 }
-                else
-                {
-                    System.out.println("failed");
-                    client.close();
-                }
-            }
-            catch (SQLException ex)
-            {
+            } catch (SQLException ex) {
                 ex.printStackTrace();
             }
         }
     }
 
-    public void receiveMsg(Message msg)
-    {
-        clients.forEach((ServerClient c) ->
-        {
-            if (!msg.getMessage().equals("\0exit"))
-            {
-                try
-                {
-                    c.sendMsg(msg + "\n");
+    public void receiveMsg(Message msg) {
+        ServerClient toDisconnect = null;
+        for (ServerClient client : clients) {
+            if (!msg.getMessage().contains("\0exit")) {
+                try {
+                    client.sendMsg(msg.toString());
                     database.storeMessage(msg);
-                }
-                catch (SQLException ex)
-                {
+                } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
+            } else {
+                toDisconnect
+                        = clients.stream().filter(c -> c.getName().equals(msg.getUsername())).findFirst().get();
             }
-            else
-            {
-                disconnectClient(c);
-            }
-        });
-    }
-
-    public void disconnectClient(ServerClient client)
-    {
-        clients.remove(client);
-        for (ServerClient c : clients)
-        {
-            c.sendMsg(client.getName() + " disconnected\n");
-            System.out.println(client.getName() + " disconnected\n");
+        }
+        if (toDisconnect != null) {
+            disconnectClient(toDisconnect);
         }
     }
 
-//    public void doStuff()
-//    {
-//        try
-//        {
-//            ServerSocket server = new ServerSocket(5555);
-//            System.out.println("Server gestartet.");
-//            LinkedList<PrintWriter> writers = new LinkedList();
-//
-//            while (true)
-//            {
-//                Socket client = server.accept();
-//                //Datenbank
-//                ServerClient sc = ServerClient(client, username);
-//                xD.add(sc);
-//                writers.add(new PrintWriter(client.getOutputStream()));
-//                Thread threadForClients = new Thread(() ->
-//                {
-//                    try
-//                    {
-//                        InputStream inputstream = client.getInputStream();
-//                        BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream));
-//
-//                        String line = "";
-//                        while ((line = reader.readLine()) != null)
-//                        {
-//                            final String jo = line;
-//                            writers.forEach(toSend ->
-//                            {
-//                                toSend.write(jo + "\n");
-//                                toSend.flush();
-//                            });
-//                            System.out.println("Empfangen vom Client: " + line);
-//                        }
-//                        reader.close();
-//                    }
-//                    catch (IOException ex)
-//                    {
-//                        ex.printStackTrace();
-//                    }
-//                    System.out.println("End");
-//                });
-//                threadForClients.start();
-//            }
-//        }
-//        catch (IOException ex)
-//        {
-//            ex.printStackTrace();
-//        }
-//    }
+    public void disconnectClient(ServerClient client) {
+        clients.remove(client);
+        for (ServerClient c : clients) {
+            c.sendMsg(client.getName() + " disconnected");
+            System.out.println(client.getName() + " disconnected\n");
+        }
+    }
 }

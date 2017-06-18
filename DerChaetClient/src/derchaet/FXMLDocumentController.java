@@ -5,6 +5,7 @@
  */
 package derchaet;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.beans.property.SimpleStringProperty;
@@ -26,10 +27,11 @@ import javafx.scene.input.KeyEvent;
  */
 public class FXMLDocumentController implements Initializable {
 
-    MessageContainer messageContainer;
-    StringProperty username = new SimpleStringProperty();
-    StringProperty password = new SimpleStringProperty();
-    StringProperty serverAddr = new SimpleStringProperty();
+    private MessageContainer messageContainer;
+    private StringProperty username = new SimpleStringProperty();
+    private StringProperty password = new SimpleStringProperty();
+    private StringProperty serverAddr = new SimpleStringProperty();
+    private Client client;
 
     @FXML
     private void onLogin() {
@@ -41,11 +43,21 @@ public class FXMLDocumentController implements Initializable {
         tfServerAddr.setText("");
 
         if (!(username.isEmpty().or(serverAddr.isEmpty()).or(password.isEmpty()).get())) {
-            tabPane.getSelectionModel().select(1);
+
+            try {
+                client.connect(username.get(), password.get(), serverAddr.get());
+                tabPane.getSelectionModel().select(1);
+            } catch (Exception ex) {
+                Alert a = new Alert(Alert.AlertType.ERROR);
+                a.setTitle("Fehler");
+                a.setHeaderText("Verbindung zum Server fehlgeschlagen!");
+                a.setContentText(ex.toString());
+                a.showAndWait();
+            }
         } else {
             Alert a = new Alert(Alert.AlertType.ERROR);
             a.setTitle("Fehler");
-            a.setHeaderText("Ein oder Mehrere Felder sind leer!");
+            a.setHeaderText("Ein oder mehrere Felder sind leer!");
             a.setContentText("Füllen Sie bitte alle Felder aus!");
             a.showAndWait();
         }
@@ -53,6 +65,7 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private void onLogout() {
+        client.disconnect();
         tabPane.getSelectionModel().select(0);
     }
 
@@ -60,7 +73,7 @@ public class FXMLDocumentController implements Initializable {
     private void onKeyPressed(KeyEvent k) {
         taChat.toBack();
         //taChat.setRotate(taChat.getRotate() + 10);
-                
+
         if (k.getCode() == KeyCode.ENTER) {
             onMessageSend();
         }
@@ -70,23 +83,18 @@ public class FXMLDocumentController implements Initializable {
     private void onMessageSend() {
         String message = tfMessage.getText();
         tfMessage.setText("");
-        taChat.setRotate(0);
-        messageContainer.append(lbName.getText() + ": " + message);
-        
-        taChat.positionCaret(taChat.textProperty().length().get());
+        if (!message.isEmpty()) {
+            client.sendMsg(message);
+        }
     }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        //taChat.textProperty().bind(textContent);
-        messageContainer = new MessageContainer(taChat.textProperty());
+        messageContainer = new MessageContainer(taChat);
+        client = new Client(messageContainer);
         lbName.textProperty().bind(username);
-        taChat.textProperty().addListener((observable, oldValue, newValue) -> {
-            taChat.selectPositionCaret(taChat.getLength());
-            System.out.println("TRIGGERED");
-        });
     }
-    
+
     @FXML
     private TextField tfUser;
     @FXML
@@ -102,7 +110,4 @@ public class FXMLDocumentController implements Initializable {
     @FXML
     private TextArea taChat;
 
-    /*
-    Wenn eine nachricht eingeht, soll das chatfenster vibrieren
-     */
 }
