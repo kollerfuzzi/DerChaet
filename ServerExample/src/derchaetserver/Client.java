@@ -3,7 +3,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package serverexample;
+package derchaetserver;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,46 +22,71 @@ public class Client
 {
     public static void main(String[] args)
     {
+        Client cl = new Client();
+        cl.makeClienting();
+    }
+
+    private void makeClienting()
+    {
         try
         {
+            Scanner scan = new Scanner(System.in);
+
+            System.out.print("Enter your name to log in: ");
+            String username = scan.nextLine();
+            System.out.print("Enter your password to log in: ");
+            String password = scan.nextLine();
+
             Socket client = new Socket("localhost", 5555);
             System.out.println("Client go.");
             OutputStream outputstream = client.getOutputStream();
             PrintWriter writer = new PrintWriter(outputstream);
             InputStream inputstream = client.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputstream));
-            
-            Scanner scan = new Scanner(System.in);
-            Thread chat = new Thread(new Runnable()
+            writer.write(username + "\0" + password + "\n");
+            writer.flush();
+
+            Thread chat = new Thread(() ->
             {
-                @Override
-                public void run()
+                String message = "";
+                while (true)
                 {
-                    String message = "";
-                    while(!message.equals("exit"))
+                    if (Thread.interrupted())
                     {
-                        System.out.println("Gib dei Nachricht ein jo:");
-                        message = scan.next();
-                        writer.write(message + "\n");
-                        writer.flush();
-                        System.out.println(message);
+                        return;
                     }
+                    System.out.println("Enter message:");
+                    message = scan.nextLine();
+                    writer.write(message + "\n");
+                    writer.flush();
                 }
             });
             chat.start();
-            
+
             String s = "";
-            
-            while((s = reader.readLine()) != null)
+
+            while ((s = reader.readLine()) != null)
             {
-                System.out.println("Empfangen vom Server: " + s);
+                System.out.println("Received from server: " + s);
             }
             writer.close();
             reader.close();
+            chat.interrupt();
+            System.out.println("End.");
         }
-        catch(IOException ex)
+        catch (IOException ex)
         {
             ex.printStackTrace();
         }
     }
+
+//    private void enterNameAndPassword(Scanner scan, PrintWriter writer)
+//    {
+//        System.out.print("Enter your name to log in: ");
+//        String username = scan.nextLine();
+//        System.out.print("Enter your password to log in: ");
+//        String password = scan.nextLine();
+//        writer.write(username + "\0" + password);
+//        writer.flush();
+//    }
 }

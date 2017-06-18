@@ -126,10 +126,10 @@ public class DBAccess {
         if (insertMessage == null) {
             insertMessage = db.getConn().prepareStatement(insertMessageStr);
         }
-        insertMessage.setString(1, msg.getUsername());
-        insertMessage.setString(2, msg.getMessage());
-        insertMessage.setTimestamp(3, new Timestamp(
+        insertMessage.setTimestamp(1, new Timestamp(
                 msg.getTimestamp().toEpochSecond(ZoneOffset.UTC)));
+        insertMessage.setString(2, msg.getUsername());
+        insertMessage.setString(3, msg.getMessage());
         insertMessage.executeUpdate();
     }
 
