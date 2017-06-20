@@ -50,15 +50,14 @@ public class Server {
                 String cred = "";
                 cred = AES2Point0.decryptHyperSecurely(reader.readLine());
                 String[] split = cred.split("\0");
-                System.out.println("[" + split[0] + "][" + split[1] + "]");
-
+                
                 try {
                     database = new DBAccess("chaet");
                 } catch (ClassNotFoundException ex) {
                     ex.printStackTrace();
                 }
 
-                if (database.checkUserCredentials(split[0], split[1])) {
+                if (split.length > 1 && database.checkUserCredentials(split[0], split[1])) {
                     System.out.println("User credentials are correct");
                     ServerClient cl = new ServerClient(client, (Message t)
                             -> {
