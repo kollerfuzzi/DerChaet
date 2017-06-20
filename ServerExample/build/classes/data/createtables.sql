@@ -26,5 +26,3 @@ INSERT INTO ChatUser (username, pwd, email, enabled) VALUES('Elias', 'kollerfuzz
 INSERT INTO ChatUser (username, pwd, email, enabled) VALUES('Alexander', 'mayer', 'mayalb14@htlkaindorf.at', TRUE);
 INSERT INTO Message (sendtime, source_user, message) VALUES(TO_TIMESTAMP('03.08.2007 08:33', 'DD.MM.YYYY HH:MI'), 'Elias', 'Hello');
 INSERT INTO Message (sendtime, source_user, message) VALUES(TO_TIMESTAMP('03.08.2007 08:34', 'DD.MM.YYYY HH:MI'), 'Alexander', 'Hi');
-INSERT INTO Message (sendtime, source_user, message) VALUES(TO_TIMESTAMP('03.08.2007 08:35', 'DD.MM.YYYY HH:MI'), 'gg', 'Smoke W33D');
-
